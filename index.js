@@ -1,30 +1,43 @@
 import express from 'express';
-import cors from 'cors'; // ✅ Importa o middleware de CORS
+import cors from 'cors';
 import fetch from 'node-fetch';
 import { randomUUID } from 'crypto';
 
 const app = express();
 
-// ✅ Habilita CORS para todas as origens (inclusive SAP Build Apps)
 app.use(cors());
-
-// Middleware para interpretar JSON no corpo das requisições
 app.use(express.json());
 
 const url = 'https://api.mercadopago.com/v1/payments';
 
-// Rota para criar pagamento
+// Rota para criar pagamento dinamicamente
 app.post('/criar-pagamento', (req, res) => {
   const idempotencyKey = randomUUID();
 
+  // 🔽 Extrai dados enviados pelo SAP Build Apps
+  const {
+    transaction_amount,
+    description,
+    email,
+    first_name,
+    last_name
+  } = req.body;
+
+  // ✅ Verifica se os campos obrigatórios foram enviados
+  if (!transaction_amount || !email) {
+    return res.status(400).json({
+      erro: 'Campos obrigatórios ausentes: transaction_amount e email são obrigatórios.'
+    });
+  }
+
   const data = {
-    transaction_amount: 0.10,
-    description: "Pagamento via PIX",
+    transaction_amount,
+    description: description || 'Pagamento via PIX',
     payment_method_id: "pix",
     payer: {
-      email: "gustavo.oliveira.a@hotmail.com",
-      first_name: "CARTA",
-      last_name: "TESRTE"
+      email,
+      first_name: first_name || '',
+      last_name: last_name || ''
     }
   };
 
@@ -53,12 +66,10 @@ app.post('/criar-pagamento', (req, res) => {
   });
 });
 
-// Rota teste
 app.get('/', (req, res) => {
   res.send('🚀 API MercadoPago PIX rodando!');
 });
 
-// Porta
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
