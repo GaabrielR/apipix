@@ -1,12 +1,19 @@
 import express from 'express';
+import cors from 'cors'; // ✅ Importa o middleware de CORS
 import fetch from 'node-fetch';
 import { randomUUID } from 'crypto';
 
 const app = express();
+
+// ✅ Habilita CORS para todas as origens (inclusive SAP Build Apps)
+app.use(cors());
+
+// Middleware para interpretar JSON no corpo das requisições
 app.use(express.json());
 
 const url = 'https://api.mercadopago.com/v1/payments';
 
+// Rota para criar pagamento
 app.post('/criar-pagamento', (req, res) => {
   const idempotencyKey = randomUUID();
 
@@ -46,11 +53,13 @@ app.post('/criar-pagamento', (req, res) => {
   });
 });
 
+// Rota teste
 app.get('/', (req, res) => {
   res.send('🚀 API MercadoPago PIX rodando!');
 });
 
-const PORT = 3000;
+// Porta
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
